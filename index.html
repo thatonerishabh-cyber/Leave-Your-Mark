@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leave your mark</title>
+<meta name="description" content="One circle each. Sign in, pick a colour and leave your mark on the wall.">
+<meta name="theme-color" content="#2563eb">
+<meta property="og:title" content="Leave your mark">
+<meta property="og:description" content="One circle each. Sign in, pick a colour and leave your mark on the wall.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%232563eb'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&display=swap">
+<style>
+:root{--bg:#f3f7ff;--ink:#0f1b33;--tile:#ffffff;--line:#c5d6f5;--accent:#2563eb;--accent2:#1d4ed8;--hot:#ff3d71;--grad:linear-gradient(160deg,#e6efff 0%,#f8fbff 60%,#eaf2ff 100%)}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--ink:#e8efff;--tile:#141d33;--line:#2a3a63;--accent:#5b8cff;--accent2:#3b6df0;--grad:linear-gradient(160deg,#0b1220 0%,#101a30 60%,#0d1a33 100%)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--grad) fixed;color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 14px}
+h1{font-weight:800;font-size:clamp(2rem,7vw,3.6rem);margin:0;letter-spacing:-.03em;color:var(--accent)}
+.disc{max-width:640px;width:94vw;margin:10px 0 0;padding:8px 12px;border:2px solid var(--accent);background:var(--tile);border-radius:10px;text-align:center;font-size:.9rem;font-weight:500;line-height:1.4}
+#loading{position:fixed;inset:0;z-index:100;background:var(--grad);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;text-align:center;transition:opacity .4s}
+#loading{animation:lf .5s ease 5s forwards}
+@keyframes lf{to{opacity:0;visibility:hidden;pointer-events:none}}
+#loading.off{opacity:0;visibility:hidden;pointer-events:none}
+#loading .disc{margin:0}
+#loading{cursor:pointer}
+.tap{margin:0;font-size:.85rem;opacity:.6}
+.dots{display:grid;grid-template-columns:repeat(4,14px);gap:4px}
+  .dots i{height:14px;border-radius:3px;background:var(--accent);opacity:.2;animation:pu 1.2s infinite}
+@keyframes pu{50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.5}}
+.note{margin:0 0 10px;padding:6px 12px;border-radius:8px;background:var(--tile);border:2px dashed var(--accent);font-size:.85rem;text-align:center}
+p.sub{margin:6px 0 18px;opacity:.75;text-align:center}
+#box{width:min(96vw,1200px);max-height:72vh;overflow:auto;border:3px solid var(--accent);border-radius:12px;padding:4px;background:var(--line);box-shadow:0 8px 30px #2563eb33}
+#wall{--cell:12px;display:grid;grid-template-columns:repeat(80,var(--cell));grid-auto-rows:var(--cell);gap:1px;width:max-content;margin:0 auto}
+.c{background:var(--tile);border:0;border-radius:50%;padding:0;touch-action:manipulation;font-family:inherit;font-weight:800;font-size:calc(var(--cell)*.45);color:#fff;cursor:pointer;display:grid;place-items:center;overflow:hidden;text-shadow:0 0 2px #0008}
+.c:hover:not(.taken){outline:2px solid var(--accent)}
+.c.taken{cursor:pointer}
+.c.sel{outline:3px solid var(--accent2);outline-offset:1px}
+.c.mine{outline:3px solid var(--ink);outline-offset:1px}
+.c.new{box-shadow:inset 0 0 0 2px var(--hot)}
+.c.flash{animation:fl .7s 3}
+@keyframes fl{50%{transform:scale(1.6);z-index:2}}
+@media (prefers-reduced-motion:reduce){.c.flash{animation:none;outline:3px solid var(--hot)}}
+.bar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;margin:16px 0}
+button,input{font-family:inherit;font-size:.95rem}
+.bar button,.pick button.go{background:var(--tile);color:var(--ink);border:2px solid var(--accent);border-radius:8px;padding:8px 12px;cursor:pointer}
+.bar button:disabled{opacity:.4;cursor:default}
+.bar input{width:5.5em}
+.pick{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;background:var(--tile);border:1px solid var(--line);border-radius:12px;padding:12px 14px;max-width:640px;width:94vw}
+#tools{display:none;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.sw button[aria-pressed=true]{border-color:var(--ink)}
+input{padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+#ch{width:4.2em;text-align:center}
+textarea{font-family:inherit;font-size:.95rem;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;width:min(100%,380px)}
+.pick button.go{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border:0;font-weight:800}
+.pick button.go:disabled{opacity:.4}
+.cp{display:flex;align-items:center;gap:6px;font-weight:500}
+.cp input{width:44px;height:34px;padding:2px;cursor:pointer}
+.link{background:none;border:0;color:var(--ink);opacity:.7;text-decoration:underline;cursor:pointer}
+#msg{min-height:1.4em;margin-top:10px}
+#admin{display:none;width:min(94vw,900px);margin-top:28px;background:var(--tile);border:1px solid var(--line);border-radius:12px;padding:16px}
+#admin h2{margin:0 0 10px;font-size:1.3rem}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:10px}.stats b{font-size:1.8rem;display:block}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}td.m{white-space:normal;min-width:180px}
+tr.r{cursor:pointer}tr.r:hover{background:var(--bg)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="loading" role="status" aria-label="Loading">
+  <h1>Leave your mark</h1>
+  <p class="disc"><b>Disclaimer:</b> Heavily inspired by @seb.draws.things and by thatonerishabh on YouTube. Please don’t swear.</p>
+  <div class="dots" id="dots"></div>
+  <p class="tap">Tap anywhere to continue</p>
+</div>
+<script>document.getElementById("loading").addEventListener("pointerdown",function(){this.classList.add("off")});</script>
+<h1>Leave your mark</h1>
+<p class="note" id="offline" hidden>Preview mode: Firebase couldn’t load here, so circles work but aren’t saved.</p>
+<p class="sub" id="sub">One circle each. Pick a free one, choose a colour, claim it.</p>
+<div class="bar" id="zoom"><button id="zo" aria-label="Zoom out">−</button><button id="zi" aria-label="Zoom in">+</button></div>
+<div id="box"><div id="wall" role="grid" aria-label="Wall of circles"></div></div>
+<div class="bar" id="nav"></div>
+<div class="pick">
+  <button class="go" id="signin">Sign in with Google to claim a circle</button>
+  <div id="tools">
+    <div class="sw" id="sw"></div>
+    <label class="cp">Colour your circle <input type="color" id="cc" value="#e63946" aria-label="Pick any colour"></label>
+    <input id="ch" maxlength="2" placeholder="A" aria-label="One or two characters (optional)">
+    <textarea id="msgin" maxlength="500" rows="2" placeholder="Leave a message (up to 500 characters, optional)" aria-label="Message"></textarea>
+    <button class="go" id="go" disabled>Claim circle</button>
+    <button class="link" id="out">Sign out</button>
+  </div>
+</div>
+<div id="msg" role="status"></div>
+
+<section id="admin" aria-label="Admin dashboard">
+  <h2>Admin</h2>
+  <div class="stats"><div><b id="stToday">0</b>new today</div><div><b id="stTotal">0</b>total circles</div></div>
+  <div class="bar" style="justify-content:flex-start">
+    <button id="tabToday">Today</button><button id="tabLatest">Latest 100</button>
+    <label><input type="checkbox" id="showSer"> Serial numbers on wall</label>
+    <label><input type="checkbox" id="showNew" checked> Highlight today's circles</label>
+  </div>
+  <div class="tw"><table><thead><tr><th>Serial</th><th>Name</th><th>Email</th><th>Page / circle</th><th>Message</th><th>Time</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+
+<script>/* Pre-render the 4,000 circles so they show instantly, even before Firebase loads */
+(function(){var w=document.getElementById("wall"),f=document.createDocumentFragment();for(var i=0;i<4000;i++){var b=document.createElement("button");b.className="c";b.dataset.i=i;b.title="Free circle "+(i+1);f.appendChild(b);}w.appendChild(f);var c=Math.max(3,Math.floor((Math.min(innerWidth*.96,1200)-14-79)/80));w.style.setProperty("--cell",c+"px");})();</script>
+<script type="module">
+let OFFLINE=false, initializeApp,getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged,getFirestore,collection,doc,query,where,orderBy,limit,onSnapshot,runTransaction,getDoc,serverTimestamp,Timestamp;
+try{
+  const G="https://www.gstatic.com/firebasejs/10.14.1/";
+  const [A,Au,Fs]=await Promise.all([import(G+"firebase-app.js"),import(G+"firebase-auth.js"),import(G+"firebase-firestore.js")]);
+  ({initializeApp}=A);({getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}=Au);
+  ({getFirestore,collection,doc,query,where,orderBy,limit,onSnapshot,runTransaction,getDoc,serverTimestamp,Timestamp}=Fs);
+}catch(e){OFFLINE=true;}
+
+// 1) Paste your Firebase web app config
+const firebaseConfig = {apiKey:"AIzaSyBSNo3Om5LE8wGCAYu4SBbaL92rcPtTOgc",authDomain:"leave-your-mark-d2604.firebaseapp.com",projectId:"leave-your-mark-d2604",storageBucket:"leave-your-mark-d2604.firebasestorage.app",messagingSenderId:"567022350746",appId:"1:567022350746:web:67061f3bd7689b5d90ca23"};
+// 2) Your admin Google email (must match firestore.rules)
+const ADMIN_EMAIL = "thatonerishabh@gmail.com";
+const PAGES = 1000, COLS = 80, ROWS = 50, PER = COLS*ROWS;   // 4,000 circles per page, 1000 pages = 4,000,000 circles
+const COLORS = ["#e63946","#f4803a","#e9b824","#3aa65c","#1f9bb5","#2b4acb","#7b3fc4","#d6408f","#1c1b19","#8a8578"];
+
+let app,auth,db;
+if(!OFFLINE){try{app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app);}catch(e){OFFLINE=true;}}
+let localSerial=0;
+const t0=Date.now(),ready={auth:false,cells:false};
+const maybeHide=()=>{};
+setTimeout(()=>document.getElementById("loading").classList.add("off"),5000);
+document.getElementById("dots").innerHTML=Array.from({length:16},(_,i)=>`<i style="animation-delay:${(i%4+Math.floor(i/4))*.12}s"></i>`).join("");
+const $ = id => document.getElementById(id), say = t => $("msg").textContent = t;
+const clamp = p => Math.min(Math.max(Math.floor(p)||1,1),PAGES);
+const startOfToday = () => {const d=new Date();d.setHours(0,0,0,0);return Timestamp.fromDate(d);};
+let user=null, uid=null, isAdmin=false, page=clamp(location.hash.slice(1)), color=COLORS[0], sel=null, mine=null, cells={}, unsubCells=null, focus=null, scrolled=false, cell=12, adminUnsubs=[], todayStart=(()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime();})(), showSer=false, showNew=true;
+
+// Curse filter: catches leetspeak (f*ck, sh1t, b!tch), stretched letters and f.u.c.k style gaps
+const LEET={"0":"o","1":"i","!":"i","|":"i","3":"e","4":"a","@":"a","5":"s","$":"s","7":"t"};
+const LONG=["fuck","shit","bitch","cunt","pussy","whore","nigger","nigga","faggot","asshole","bastard","wanker","bollocks","dickhead","motherfucker"];
+const SHORT=["ass","dick","cock","slut","twat","prick","fag","retard","tits"];
+const mk=(w,b)=>new RegExp((b?"(?:^|[^a-z])":"")+[...w].map(c=>c+"+").join("[^\\sa-z]*")+(b?"(?:es|s|ed|er|y|ing)?(?:$|[^a-z])":""),"i");
+const BAD=[...LONG.map(w=>mk(w)),...SHORT.map(w=>mk(w,true))];
+const dirty=t=>{const n=t.toLowerCase().replace(/[01345$@7!|]/g,c=>LEET[c]);return BAD.some(x=>x.test(n));};
+$("cc").oninput=e=>{color=e.target.value;[...$("sw").children].forEach(x=>x.setAttribute("aria-pressed",false));};
+$("signin").onclick=()=>OFFLINE?onUser({uid:"local",displayName:"You",email:""}):signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>say("Sign-in failed: "+e.message));
+$("out").onclick=()=>OFFLINE?onUser(null):signOut(auth);
+
+COLORS.forEach((c,i)=>{const b=document.createElement("button");b.style.background=c;b.setAttribute("aria-label","Colour "+(i+1));b.setAttribute("aria-pressed",i===0);b.onclick=()=>{color=c;$("cc").value=c;[...$("sw").children].forEach(x=>x.setAttribute("aria-pressed",x===b));};$("sw").append(b);});
+
+function renderNav(){
+  const n=$("nav");n.innerHTML="";
+  const btn=(t,fn,dis)=>{const b=document.createElement("button");b.textContent=t;b.disabled=!!dis;b.onclick=fn;n.append(b);};
+  btn("First",()=>go(1),page<=1);btn("Prev",()=>go(page-1),page<=1);
+  const i=document.createElement("input");i.type="number";i.min=1;i.max=PAGES;i.value=page;i.setAttribute("aria-label","Page number");
+  i.onchange=()=>go(clamp(i.value));n.append(i);
+  const t=document.createElement("span");t.textContent="of "+PAGES.toLocaleString();n.append(t);
+  btn("Next",()=>go(page+1),page>=PAGES);btn("Random",()=>go(1+Math.floor(Math.random()*PAGES)));
+  if(mine)btn("My circle",()=>go(mine.page,mine.index));
+}
+function go(p,f){page=clamp(p);sel=null;focus=f??null;scrolled=false;location.hash=page;renderNav();listen();draw();}
+
+function setCell(n){cell=Math.min(Math.max(Math.round(n),3),48);$("wall").style.setProperty("--cell",cell+"px");}
+function fit(){setCell((Math.min(innerWidth*.96,1200)-14-(COLS-1))/COLS);}
+$("zi").onclick=()=>setCell(cell<12?cell+3:cell*1.4);$("zo").onclick=()=>setCell(cell/1.4);addEventListener("resize",fit);
+
+function draw(){
+  const w=$("wall");
+  if(w.children.length!==PER){  // fallback build (normally pre-rendered below)
+    w.textContent="";const f=document.createDocumentFragment();
+    for(let i=0;i<PER;i++){const b=document.createElement("button");b.className="c";b.dataset.i=i;f.append(b);}
+    w.append(f);
+  }
+  const now=todayStart;
+  for(let i=0;i<PER;i++){   // update in place: circles never disappear or flicker
+    const b=w.children[i],d=cells[page+"_"+i];
+    let cls="c";
+    if(d){cls+=" taken";if(d.uid===uid)cls+=" mine";if(isAdmin&&showNew&&d.at&&d.at.toMillis()>=now)cls+=" new";}
+    if(sel===i)cls+=" sel";
+    if(focus===i)cls+=" flash";
+    if(b.className!==cls)b.className=cls;
+    b.style.background=d?d.color:"";
+    const t=d?String(showSer?d.serial:(d.char||"")):"";
+    if(b.textContent!==t)b.textContent=t;
+    const ti=d?"#"+d.serial:"Free circle "+(i+1);
+    if(b.title!==ti)b.title=ti;
+  }
+  if(focus!==null&&!scrolled&&w.children[focus]){scrolled=true;w.children[focus].scrollIntoView({block:"center",inline:"center"});}
+  $("go").disabled=!(sel!==null&&!mine&&uid);
+}
+$("wall").onclick=e=>{
+  const b=e.target.closest(".c");if(!b)return;
+  const i=+b.dataset.i,d=cells[page+"_"+i];
+  if(d){say("Circle #"+d.serial.toLocaleString()+" on page "+page+".");return;}
+  if(!uid){say("Sign in with Google to claim a circle.");return;}
+  if(mine){say("You've already left your mark on page "+mine.page+".");return;}
+  sel=i;draw();say("Circle "+(i+1)+" selected.");
+};
+function listen(){
+  if(OFFLINE){draw();return;}
+  if(unsubCells)unsubCells();cells={};
+  unsubCells=onSnapshot(query(collection(db,"cells"),where("page","==",page)),s=>{cells={};s.forEach(x=>cells[x.id]=x.data());draw();ready.cells=true;maybeHide();},e=>{say("Couldn't load the wall: "+e.message);ready.cells=true;maybeHide();});
+}
+
+$("go").onclick=async()=>{
+  if(sel===null||!uid||mine)return;
+  let index=sel,cellId=page+"_"+index,ch=$("ch").value.trim().slice(0,2),message=$("msgin").value.trim().slice(0,500);
+  if(dirty(ch))ch="";
+  const swapped=dirty(message);
+  if(swapped)message=(user.displayName||"Someone")+" was here";
+  if(OFFLINE){
+    const serial=++localSerial;
+    cells[cellId]={page,index,color,char:ch,uid,serial,at:null};
+    mine={page,index,serial};sel=null;lockedUI();
+    say("Preview mode: your circle shows here but isn't saved. Deploy with Firebase to make it permanent.");renderNav();draw();return;
+  }
+  $("go").disabled=true;
+  try{
+    const serial=await runTransaction(db,async tx=>{
+      const cref=doc(db,"meta","counter"),cs=await tx.get(cref),n=(cs.exists()?cs.data().n:0)+1;
+      tx.set(cref,{n});
+      tx.set(doc(db,"cells",cellId),{page,index,color,char:ch,uid,serial:n,at:serverTimestamp()});
+      tx.set(doc(db,"marks",uid),{cellId,page,index,serial:n,name:user.displayName||"",email:user.email||"",message,at:serverTimestamp()});
+      return n;
+    });
+    mine={page,index,serial};sel=null;lockedUI();say("Done. You're circle #"+serial.toLocaleString()+"."+(swapped?" Your message was swapped for a default one.":""));
+  }catch(e){say("That circle was just taken or the claim was refused. Pick another.");sel=null;}
+  renderNav();draw();
+};
+function lockedUI(){$("go").textContent="Marked";$("go").disabled=true;$("sub").textContent="Your mark is #"+mine.serial.toLocaleString()+", page "+mine.page+", circle "+(mine.index+1)+".";}
+
+// ---- Admin dashboard
+function fmt(ts){return ts?ts.toDate().toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):"…";}
+function startAdmin(mode){
+  adminUnsubs.forEach(u=>u());adminUnsubs=[];
+  adminUnsubs.push(onSnapshot(doc(db,"meta","counter"),s=>$("stTotal").textContent=(s.exists()?s.data().n:0).toLocaleString()));
+  const base=collection(db,"marks");
+  adminUnsubs.push(onSnapshot(query(base,where("at",">=",startOfToday())),s=>$("stToday").textContent=s.size.toLocaleString()));
+  const q=mode==="latest"?query(base,orderBy("at","desc"),limit(100)):query(base,where("at",">=",startOfToday()),orderBy("at","desc"));
+  adminUnsubs.push(onSnapshot(q,s=>{
+    const tb=$("rows");tb.innerHTML="";
+    if(s.empty){tb.innerHTML="<tr><td colspan=6>No circles yet.</td></tr>";return;}
+    s.forEach(x=>{
+      const d=x.data(),tr=document.createElement("tr");tr.className="r";
+      [["#"+d.serial],[d.name],[d.email],["p"+d.page+" / "+(d.index+1)],[d.message,"m"],[fmt(d.at)]].forEach(([t,c])=>{const td=document.createElement("td");td.textContent=t||"";if(c)td.className=c;tr.append(td);});
+      tr.onclick=()=>{go(d.page,d.index);scrollTo({top:0,behavior:"smooth"});};
+      tb.append(tr);
+    });
+  },e=>say("Admin list failed: "+e.message)));
+}
+$("tabToday").onclick=()=>startAdmin("today");$("tabLatest").onclick=()=>startAdmin("latest");
+$("showSer").onchange=e=>{showSer=e.target.checked;draw();};
+$("showNew").onchange=e=>{showNew=e.target.checked;draw();};
+
+async function onUser(u){
+  user=u;uid=u?u.uid:null;mine=null;
+  isAdmin=!!u&&u.email===ADMIN_EMAIL;
+  $("signin").style.display=u?"none":"";$("tools").style.display=u?"flex":"none";
+  $("go").textContent="Claim circle";$("sub").textContent="One circle each. Pick a free one, choose a colour, claim it.";
+  $("admin").style.display=isAdmin?"block":"none";
+  adminUnsubs.forEach(x=>x());adminUnsubs=[];
+  if(isAdmin)startAdmin("today");
+  if(u&&!OFFLINE){const m=await getDoc(doc(db,"marks",uid));if(m.exists()){mine=m.data();if(!location.hash)page=mine.page;lockedUI();}}
+  renderNav();listen();draw();ready.auth=true;maybeHide();
+}
+if(OFFLINE){$("offline").hidden=false;onUser(null);}else onAuthStateChanged(auth,onUser);
+fit();renderNav();listen();draw();
+addEventListener("hashchange",()=>{const p=clamp(location.hash.slice(1));if(p!==page)go(p);});
+</script>
+</body>
+</html>
